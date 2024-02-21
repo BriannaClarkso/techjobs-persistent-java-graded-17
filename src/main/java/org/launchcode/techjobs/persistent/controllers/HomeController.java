@@ -36,7 +36,7 @@ public class HomeController {
     public String index(Model model) {
 
         model.addAttribute("title", "MyJobs");
-//        model.addAttribute("jobs", JobRepository.findAll()); //??
+        model.addAttribute("jobs", jobRepository.findAll()); //??
 
         return "index";
     }
@@ -44,55 +44,55 @@ public class HomeController {
     @GetMapping("add")
     public String displayAddJobForm(Model model) {
         model.addAttribute("title", "Add Job");
-        model.addAttribute(new Job());
         model.addAttribute("employers", employerRepository.findAll()); //???
         model.addAttribute("skills", skillRepository.findAll()); //???
+        model.addAttribute(new Job());
         return "add";
     }
 
     @PostMapping("add")
     public String processAddJobForm(@ModelAttribute @Valid Job newJob,
                                     Errors errors, Model model,
-                                    @RequestParam(required = false) int employerId,
+                                    @RequestParam int employerId,
                                     @RequestParam List<Integer> skills) {
 
 
         if (errors.hasErrors()) {
             model.addAttribute("title", "Add Job");
             return "add";
-        }
+        } else {
 
-//        model.addAttribute("employers", employerRepository.findAll(employerId)); //???
-//        model.addAttribute("skills", skillRepository.findAll());
-//        model.addAttribute("jobs", jobRepository.findAll());
+            Optional employerOptional = employerRepository.findById(employerId);
 
-        Optional<Employer> employerOptional = employerRepository.findById(employerId);
-//        Optional employerOptional = employerRepository.findById(employerId);
-
-        if (employerOptional.isPresent()){
-            Employer employer = employerOptional.get();
-//            newJob.setEmployer(new Employer());
+            if (employerOptional.isPresent()){
+            Employer employer = (Employer) employerOptional.get();
             newJob.setEmployer(employer);
 
-        }
+            }
 
-//            newJob.setEmployer(employerOptional.get());
-
-        List<Skill> skillObjs = (List<Skill>) skillRepository.findAllById(skills);
-//        Employer employer = employerOptional.get();
+            List<Skill> skillObjs = (List<Skill>) skillRepository.findAllById(skills);
             newJob.setSkills(skillObjs);
-//            newJob.setEmployer(employer);
             jobRepository.save(newJob);
 
             return "redirect:";
-//       }
+        }
+
 
     }
 
     @GetMapping("view/{jobId}")
     public String displayViewJob(Model model, @PathVariable int jobId) {
 
+        Optional optJob = jobRepository.findById(jobId);
+
+        if (optJob.isPresent()) {
+            Job job = (Job) optJob.get();
+            model.addAttribute("job", job);
             return "view";
+        } else {
+            return "redirect:/";
+        }
+
 
     }
 
